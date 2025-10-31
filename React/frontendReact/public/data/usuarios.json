@@ -1,0 +1,7 @@
+{
+  "usuarios": [
+    { "id": "U001", "nombre": "Juan Pérez", "correo": "juanperez@mail.com", "rol": "Cliente" },
+    { "id": "U002", "nombre": "Ana González", "correo": "anagonzalez@mail.com", "rol": "Cliente" },
+    { "id": "U003", "nombre": "Administrador", "correo": "admin@pasteleria.com", "rol": "Admin" }
+  ]
+}

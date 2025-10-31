@@ -1,0 +1,36 @@
+{
+  "productos": [
+    {
+      "id": 1,
+      "nombre": "Torta Selva Negra Clásica",
+      "descripcion": "Bizcocho de chocolate relleno con crema batida y cerezas, decorado con virutas de chocolate 🍒",
+      "precio": 19000,
+      "imagen": "img/selvanegra2.png",
+      "categoria": "Tortas"
+    },
+    {
+      "id": 2,
+      "nombre": "Torta Selva Negra (Versión Especial)",
+      "descripcion": "Nuestra versión artesanal con doble capa de crema chantilly y cerezas negras 🍫",
+      "precio": 21000,
+      "imagen": "img/selvanegra.png",
+      "categoria": "Tortas"
+    },
+    {
+      "id": 3,
+      "nombre": "Torta de Frutilla",
+      "descripcion": "Bizcocho de vainilla con crema chantilly y frutillas frescas, cubierta ligera y suave 🍓",
+      "precio": 16500,
+      "imagen": "img/torta-frutilla.jpg",
+      "categoria": "Tortas"
+    },
+    {
+      "id": 4,
+      "nombre": "Torta Especial Chayanne",
+      "descripcion": "Creación limitada inspirada en la dulzura de Chayanne 💃: bizcocho de chocolate con crema de frambuesa",
+      "precio": 25000,
+      "imagen": "img/chayanne.jpg",
+      "categoria": "Ediciones Especiales"
+    }
+  ]
+}
