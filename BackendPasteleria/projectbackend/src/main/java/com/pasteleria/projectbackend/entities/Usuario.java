@@ -1,18 +1,13 @@
 package com.pasteleria.projectbackend.entities;
 
 
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonAlias;
+
+import java.time.LocalDateTime;
 
 
 @Data
@@ -25,14 +20,38 @@ public class Usuario {
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
     private String nombre;
+    private String username;
     private String email;
     private String password;
-    private String rol;
-    /* agregados recientemente */
-    private Boolean activo = true;
+
+    @Enumerated(EnumType.STRING)
+    private Rol rol;
     
-    @OneToMany(mappedBy = "usuario")
-    @JsonIgnore
-    private List<Producto> productos;
+    @Column(nullable = false)
+    @JsonAlias({"activo"})
+    private boolean enabled = true;
+    
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+    
+    public enum Rol {
+        ADMIN,
+        CLIENTE
+    }
+    /* agregados recientemente */
+    /*private Boolean activo = true;*/
+    
+    
     
 }

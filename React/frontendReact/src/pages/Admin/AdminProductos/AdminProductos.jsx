@@ -1,31 +1,38 @@
 import { useEffect, useState } from "react";
 import { AdminNavbar } from "@/componentes/AdminNavbar/AdminNavbar.jsx";
 import { Link } from "react-router-dom";
+import { getProductos, eliminarProducto } from "@/services/productoServices";
 
 export function AdminProductos() {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const cargarDatos = async () => {
+    try {
+      const data = await getProductos();
+      setProductos(data);
+    } catch (err) {
+      console.error(err);
+      setError("Error al cargar productos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const cargar = async () => {
-      try {
-        const res = await fetch("/data/productos.json");
-        const data = await res.json();
-        setProductos(data.productos || []);
-      } catch (err) {
-        setError("Error al cargar productos");
-      } finally {
-        setLoading(false);
-      }
-    };
-    cargar();
+    cargarDatos();
   }, []);
 
-  const handleEliminar = (id) => {
-    if (window.confirm("¿Seguro que deseas eliminar este producto?")) {
-      setProductos(productos.filter((p) => p.id !== id));
-      alert("Producto eliminado (solo visual).");
+  const handleEliminar = async (id) => {
+    if (!window.confirm("¿Eliminar este producto?")) return;
+
+    try {
+      await eliminarProducto(id);
+      alert("Producto eliminado con éxito");
+      cargarDatos();
+    } catch (err) {
+      alert("Error al eliminar producto");
     }
   };
 
@@ -35,10 +42,13 @@ export function AdminProductos() {
   return (
     <>
       <AdminNavbar />
+
       <div className="container mt-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h3>Gestión de Productos</h3>
-          <Link to="/admin/nuevo-producto" className="btn btn-success">+ Nuevo Producto</Link>
+          <Link to="/admin/nuevo-producto" className="btn btn-success">
+            + Nuevo Producto
+          </Link>
         </div>
 
         <table className="table table-striped align-middle">
@@ -57,9 +67,6 @@ export function AdminProductos() {
                 <td>{p.nombre}</td>
                 <td>${p.precio.toLocaleString("es-CL")}</td>
                 <td>
-                  <Link to={`/admin/editar/${p.id}`} className="btn btn-warning btn-sm me-2">
-                    Editar
-                  </Link>
                   <button
                     onClick={() => handleEliminar(p.id)}
                     className="btn btn-danger btn-sm"

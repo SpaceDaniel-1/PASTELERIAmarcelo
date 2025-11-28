@@ -1,6 +1,6 @@
 import { Navbar } from "@/componentes/Navbar/Navbar";
 import { Footer } from "@/componentes/Footer/Footer";
-import "@/styles/Home.css";
+
 
 export function Home() {
   return (

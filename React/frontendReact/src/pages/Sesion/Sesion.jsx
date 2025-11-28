@@ -1,33 +1,48 @@
 import { useState } from "react";
 import { Navbar } from "@/componentes/Navbar/Navbar";
+import { useNavigate } from "react-router-dom";
 import "./Sesion.css";
 
 export function Sesion() {
+  const navigate = useNavigate();
+  console.log('[Sesion] render');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const dominiosPermitidos = ["@duoc.cl", "@profesor.duoc.cl", "@gmail.com"];
+    setMensaje("");
 
-    if (!email) return setMensaje(" El correo es requerido.");
-    if (!dominiosPermitidos.some((d) => email.endsWith(d)))
-      return setMensaje(" El correo debe ser @duoc.cl, @profesor.duoc.cl o @gmail.com.");
-    if (!password) return setMensaje(" La contraseña es requerida.");
-    if (password.length < 4 || password.length > 10)
-      return setMensaje(" La contraseña debe tener entre 4 y 10 caracteres.");
+    try {
+      const res = await fetch("http://localhost:8080/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
+      if (!res.ok) {
+        return setMensaje("❌ Credenciales incorrectas.");
+      }
 
-    if (usuario && usuario.email === email && usuario.password === password) {
-      setMensaje(" Inicio de sesión exitoso. ¡Bienvenido de nuevo!");
-    } else {
-      setMensaje(" Credenciales inválidas.");
+      const data = await res.json();
+
+      // Guardar token + rol
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("rol", data.rol);
+      localStorage.setItem("email", data.email);
+
+      // Redirección según rol
+      if (data.rol === "ADMIN") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+
+    } catch (error) {
+      console.error("Error en login:", error);
+      setMensaje("❌ Error de conexión con el servidor.");
     }
-
-    setEmail("");
-    setPassword("");
   };
 
   return (
@@ -35,6 +50,7 @@ export function Sesion() {
       <Navbar />
       <div className="sesion-card mt-5">
         <h2>Iniciar Sesión</h2>
+
         <form onSubmit={handleSubmit}>
           <label>Correo electrónico</label>
           <input
@@ -56,6 +72,7 @@ export function Sesion() {
             Iniciar sesión
           </button>
         </form>
+
         {mensaje && <p className="mt-3 text-center">{mensaje}</p>}
       </div>
     </>

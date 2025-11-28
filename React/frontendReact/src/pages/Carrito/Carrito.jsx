@@ -1,13 +1,16 @@
-import { useCarrito } from '@/context/CarritoContext';
-import { Navbar } from '@/componentes/Navbar/Navbar';
-import '@/styles/Carrito.css';
+import { useCarrito } from "@/context/CarritoContext";
+import { generarBoleta } from "@/services/boletaServices";
+import { Navbar } from "@/componentes/Navbar/Navbar";
 
 export function Carrito() {
-  const { carrito, eliminarProducto, vaciarCarrito, total } = useCarrito();
+  const { carrito, total, eliminar, vaciar, loading } = useCarrito();
+
+  if (loading) return <p>Cargando carrito...</p>;
 
   return (
     <>
       <Navbar />
+
       <div className="container mt-5">
         <h2 className="text-center mb-4">🛒 Tu Carrito</h2>
 
@@ -16,17 +19,18 @@ export function Carrito() {
         ) : (
           <>
             <div className="list-group mb-3">
-              {carrito.map((prod, index) => (
+              {carrito.map((item) => (
                 <div
-                  key={index}
+                  key={item.id}
                   className="list-group-item d-flex justify-content-between align-items-center"
                 >
                   <div>
-                    <strong>{prod.nombre}</strong> — ${prod.precio.toLocaleString('es-CL')}
+                    <strong>{item.producto.nombre}</strong> — $
+                    {item.subtotal.toLocaleString("es-CL")}
                   </div>
                   <button
                     className="btn btn-sm btn-outline-danger"
-                    onClick={() => eliminarProducto(prod.id)}
+                    onClick={() => eliminar(item.id)}
                   >
                     Eliminar
                   </button>
@@ -35,19 +39,28 @@ export function Carrito() {
             </div>
 
             <div className="d-flex justify-content-between align-items-center">
-              <h5>Total: ${total.toLocaleString('es-CL')}</h5>
+              <h5>Total: ${(total ?? 0).toLocaleString("es-CL")}</h5>
+
               <div>
                 <button
                   className="btn btn-secondary me-2"
-                  onClick={vaciarCarrito}
+                  onClick={vaciar}
                 >
                   Vaciar carrito
                 </button>
+
                 <button
                   className="btn btn-success"
-                  onClick={() => {
-                    alert('¡Compra realizada con éxito!');
-                    vaciarCarrito();
+                  onClick={async () => {
+                    try {
+                      const boleta = await generarBoleta();
+                      await vaciar();            // 👈 Vacía correctamente el carrito
+                      alert("Compra realizada!"); // 👌
+                      console.log("Boleta generada:", boleta);
+                    } catch (error) {
+                      console.error("Error generando boleta:", error);
+                      alert("Error generando boleta");
+                    }
                   }}
                 >
                   Finalizar compra

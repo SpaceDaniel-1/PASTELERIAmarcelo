@@ -29,35 +29,42 @@ public class UsuarioServicesImplTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        usuario = new Usuario(1L, "Daniel", "daniel@mail.com", "1234", "ADMIN", true, null);
+        usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setUsername("Daniel");
+        usuario.setEmail("daniel@mail.com");
+        usuario.setPassword("1234");
+        usuario.setRol(Usuario.Rol.ADMIN);
+        usuario.setEnabled(true);
+        usuario.setCreatedAt(null);
+        usuario.setUpdatedAt(null);
     }
 
     @Test
     void testCrearUsuario() {
         when(usuarioRepositories.save(usuario)).thenReturn(usuario);
 
-        Usuario creado = usuarioServices.crear(usuario);
+        Usuario creado = usuarioServices.save(usuario);
 
         assertNotNull(creado);
-        assertEquals("Daniel", creado.getNombre());
+        assertEquals("Daniel", creado.getUsername());
         verify(usuarioRepositories, times(1)).save(usuario);
     }
 
     @Test
     void testObtenerUsuarioPorId() {
         when(usuarioRepositories.findById(1L)).thenReturn(Optional.of(usuario));
+        Optional<Usuario> encontradoOpt = usuarioServices.findById(1L);
 
-        Usuario encontrado = usuarioServices.obtenerId(1L);
-
-        assertEquals("daniel@mail.com", encontrado.getEmail());
+        assertTrue(encontradoOpt.isPresent());
+        assertEquals("daniel@mail.com", encontradoOpt.get().getEmail());
         verify(usuarioRepositories, times(1)).findById(1L);
     }
 
     @Test
     void testListarUsuarios() {
         when(usuarioRepositories.findAll()).thenReturn(Arrays.asList(usuario));
-
-        List<Usuario> lista = usuarioServices.listarTodos();
+        List<Usuario> lista = usuarioServices.findAll();
 
         assertEquals(1, lista.size());
         verify(usuarioRepositories, times(1)).findAll();
@@ -65,9 +72,9 @@ public class UsuarioServicesImplTest {
 
     @Test
     void testEliminarUsuarioExistente() {
-        when(usuarioRepositories.existsById(1L)).thenReturn(true);
+        doNothing().when(usuarioRepositories).deleteById(1L);
 
-        usuarioServices.eliminar(1L);
+        usuarioServices.deleteById(1L);
 
         verify(usuarioRepositories, times(1)).deleteById(1L);
     }
@@ -77,17 +84,23 @@ public class UsuarioServicesImplTest {
         when(usuarioRepositories.findById(1L)).thenReturn(Optional.of(usuario));
         when(usuarioRepositories.save(any(Usuario.class))).thenReturn(usuario);
 
-        Usuario actualizado = usuarioServices.actualizar(1L, new Usuario(null, "Pedro", null, null, null, true, null));
+        when(usuarioRepositories.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertEquals("Pedro", actualizado.getNombre());
+        Usuario actualizado = usuarioServices.findById(1L)
+                .map(existing -> {
+                    existing.setUsername("Pedro");
+                    return usuarioServices.save(existing);
+                }).orElse(null);
+
+        assertNotNull(actualizado);
+        assertEquals("Pedro", actualizado.getUsername());
         verify(usuarioRepositories, times(1)).save(any(Usuario.class));
     }
 
     @Test
     void testObtenerUsuarioNoExistenteLanzaError() {
         when(usuarioRepositories.findById(2L)).thenReturn(Optional.empty());
-
-        Exception ex = assertThrows(RuntimeException.class, () -> usuarioServices.obtenerId(2L));
-        assertEquals("Usuario no encontrado", ex.getMessage());
+        Optional<Usuario> opt = usuarioServices.findById(2L);
+        assertTrue(opt.isEmpty());
     }
 }

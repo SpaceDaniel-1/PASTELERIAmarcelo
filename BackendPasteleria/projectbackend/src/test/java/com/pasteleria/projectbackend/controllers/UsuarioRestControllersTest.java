@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
+import java.util.Optional;
 
 public class UsuarioRestControllersTest {
 
@@ -36,12 +37,20 @@ public class UsuarioRestControllersTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(usuarioRestControllers).build();
-        usuario = new Usuario(1L, "Daniel", "daniel@mail.com", "1234", "ADMIN", true, null);
+        usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setUsername("Daniel");
+        usuario.setEmail("daniel@mail.com");
+        usuario.setPassword("1234");
+        usuario.setRol(Usuario.Rol.ADMIN);
+        usuario.setEnabled(true);
+        usuario.setCreatedAt(null);
+        usuario.setUpdatedAt(null);
     }
 
     @Test
     void testCrearUsuario() throws Exception {
-        when(usuarioServices.crear(any(Usuario.class))).thenReturn(usuario);
+        when(usuarioServices.save(any(Usuario.class))).thenReturn(usuario);
 
         mockMvc.perform(post("/api/usuarios")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -52,7 +61,7 @@ public class UsuarioRestControllersTest {
 
     @Test
     void testListarUsuarios() throws Exception {
-        when(usuarioServices.listarTodos()).thenReturn(List.of(usuario));
+        when(usuarioServices.findAll()).thenReturn(List.of(usuario));
 
         mockMvc.perform(get("/api/usuarios"))
                 .andExpect(status().isOk())
@@ -61,29 +70,10 @@ public class UsuarioRestControllersTest {
 
     @Test
     void testObtenerUsuarioPorId() throws Exception {
-        when(usuarioServices.obtenerId(1L)).thenReturn(usuario);
+        when(usuarioServices.findById(1L)).thenReturn(Optional.of(usuario));
 
         mockMvc.perform(get("/api/usuarios/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rol").value("ADMIN"));
-    }
-
-    @Test
-    void testEliminarUsuario() throws Exception {
-        doNothing().when(usuarioServices).eliminar(1L);
-
-        mockMvc.perform(delete("/api/usuarios/1"))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void testActualizarUsuario() throws Exception {
-        when(usuarioServices.actualizar(eq(1L), any(Usuario.class))).thenReturn(usuario);
-
-        mockMvc.perform(put("/api/usuarios/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(usuario)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Daniel"));
     }
 }

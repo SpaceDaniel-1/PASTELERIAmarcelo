@@ -1,7 +1,26 @@
-export const getProductos = async() => {
+import { apiFetch, post } from "./api";
 
-    const res = await fetch('/data/productos.json');
-    const data = await res.json();
+const BASE = "/api/productos";
 
-    return data.productos;
+export async function getProductos() {
+  return apiFetch(BASE);
+}
+
+export async function getProducto(id) {
+  return apiFetch(`${BASE}/${id}`);
+}
+
+export async function crearProducto(prod) {
+  return post(BASE, prod);
+}
+
+export async function eliminarProducto(id) {
+  return apiFetch(`${BASE}/${id}`, { method: "DELETE" });
+}
+
+export async function actualizarProducto(id, prod) {
+  return apiFetch(`${BASE}/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(prod),
+  });
 }

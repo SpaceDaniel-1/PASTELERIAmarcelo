@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getProductos } from '@/services/productoServices';
 import { ProductoCard } from '@/componentes/ProductoCard/ProductoCard';
-import { Navbar } from '@/componentes/Navbar/Navbar'; // 🔹 Agregamos el Navbar
+import { Navbar } from '@/componentes/Navbar/Navbar';
 import './Productos.css';
 
 export function Productos() {

@@ -28,13 +28,13 @@ public class UsuarioSwaggerController {
         @ApiResponse(responseCode = "200", description = "Usuarios listados correctamente",
             content = @Content(mediaType = "application/json",
                 array = @ArraySchema(schema = @Schema(implementation = Usuario.class)),
-                examples = @ExampleObject(value = "[{\"id\":1,\"nombre\":\"Daniel\",\"email\":\"daniel@mail.com\",\"rol\":\"ADMIN\",\"activo\":true}]"))
+                examples = @ExampleObject(value = "[{\"id\":1,\"username\":\"Daniel\",\"email\":\"daniel@mail.com\",\"rol\":\"ADMIN\",\"activo\":true}]"))
         ),
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping
     public ResponseEntity<List<Usuario>> listarUsuarios() {
-        List<Usuario> usuarios = usuarioServices.listarTodos();
+        List<Usuario> usuarios = usuarioServices.findAll();
         return ResponseEntity.ok(usuarios);
     }
 
@@ -47,13 +47,9 @@ public class UsuarioSwaggerController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerUsuarioPorId(@PathVariable Long id) {
-        try {
-            Usuario usuario = usuarioServices.obtenerId(id);
-            return ResponseEntity.ok(usuario);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Usuario con ID " + id + " no encontrado");
-        }
+        return usuarioServices.findById(id)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
     }
 
     // ➕ Crear usuario
@@ -66,11 +62,11 @@ public class UsuarioSwaggerController {
             description = "Datos del nuevo usuario",
             required = true,
             content = @Content(schema = @Schema(implementation = Usuario.class),
-                examples = @ExampleObject(value = "{\"nombre\":\"María\",\"email\":\"maria@mail.com\",\"password\":\"1234\",\"rol\":\"CLIENTE\",\"activo\":true}")
+                examples = @ExampleObject(value = "{\"nombre\":\"María\",\"username\":\"María007\",\"email\":\"maria@mail.com\",\"password\":\"1234\",\"rol\":\"CLIENTE\",\"activo\":true}")
             )
         )
         @RequestBody Usuario usuario) {
-        Usuario nuevo = usuarioServices.crear(usuario);
+        Usuario nuevo = usuarioServices.save(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
 
@@ -86,13 +82,19 @@ public class UsuarioSwaggerController {
         @PathVariable Long id,
         @RequestBody Usuario usuarioActualizado) {
 
-        try {
-            Usuario actualizado = usuarioServices.actualizar(id, usuarioActualizado);
-            return ResponseEntity.ok(actualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("No se pudo actualizar: usuario no encontrado");
-        }
+        return usuarioServices.findById(id)
+                .map(existing -> {
+                    // actualizar campos relevantes
+                    existing.setNombre(usuarioActualizado.getNombre());
+                    existing.setUsername(usuarioActualizado.getUsername());
+                    existing.setEmail(usuarioActualizado.getEmail());
+                    existing.setPassword(usuarioActualizado.getPassword());
+                    existing.setRol(usuarioActualizado.getRol());
+                    existing.setEnabled(usuarioActualizado.isEnabled());
+                    Usuario saved = usuarioServices.save(existing);
+                    return ResponseEntity.ok(saved);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // ❌ Eliminar usuario
@@ -104,7 +106,10 @@ public class UsuarioSwaggerController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
-        usuarioServices.eliminar(id);
-        return ResponseEntity.noContent().build();
+        return usuarioServices.findById(id)
+                .map(u -> {
+                    usuarioServices.deleteById(id);
+                    return ResponseEntity.noContent().<Void>build();
+                }).orElse(ResponseEntity.notFound().build());
     }
 }

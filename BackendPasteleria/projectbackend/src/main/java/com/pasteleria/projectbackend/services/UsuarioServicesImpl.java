@@ -1,53 +1,67 @@
 package com.pasteleria.projectbackend.services;
 
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.pasteleria.projectbackend.entities.Usuario;
+import com.pasteleria.projectbackend.repositories.UsuarioRepositories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.pasteleria.projectbackend.entities.Usuario;
-
-import com.pasteleria.projectbackend.repositories.UsuarioRepositories;
+import java.util.List;
+import java.util.Optional;
 
 @Service
-public class UsuarioServicesImpl implements UsuarioServices{
+public class UsuarioServicesImpl implements UsuarioServices {
 
-    @Autowired
-    private UsuarioRepositories usuarioRepositories;
+    private final UsuarioRepositories usuarioRepo;
+    private final PasswordEncoder passwordEncoder;
 
-    @Override
-    public Usuario crear(Usuario usuario){
-        return usuarioRepositories.save(usuario);
-    }
-
-
-    @Override
-    public Usuario obtenerId(Long id) {
-        return usuarioRepositories.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    public UsuarioServicesImpl(UsuarioRepositories usuarioRepo, PasswordEncoder passwordEncoder) {
+        this.usuarioRepo = usuarioRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public List<Usuario> listarTodos() {
-        return (List<Usuario>) usuarioRepositories.findAll();
+    public Optional<Usuario> findByUsername(String username) {
+        return usuarioRepo.findByUsername(username);
     }
 
     @Override
-    public void eliminar(Long id) {
-        if (!usuarioRepositories.existsById(id)) {
-            throw new RuntimeException("Usuario no encontrado");
+    public Optional<Usuario> findByEmail(String email) {
+        return usuarioRepo.findByEmail(email);
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return usuarioRepo.existsByUsername(username);
+    }
+
+    
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return usuarioRepo.existsByEmail(email);
+    }
+
+    @Override
+    public Usuario save(Usuario usuario) {
+        if (usuario.getPassword() != null && !usuario.getPassword().isBlank()) {
+            usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         }
-        usuarioRepositories.deleteById(id);
+        return usuarioRepo.save(usuario);
     }
 
     @Override
-    public Usuario actualizar(Long id, Usuario usuarioActualizado) {
-        Usuario existente = obtenerId(id);
-        existente.setNombre(usuarioActualizado.getNombre());
-        return usuarioRepositories.save(existente);
+    public List<Usuario> findAll() {
+        return (List<Usuario>) usuarioRepo.findAll();
     }
 
+    @Override
+    public Optional<Usuario> findById(Long id) {
+        return usuarioRepo.findById(id);
+    }
 
-
-
-
+    @Override
+    public void deleteById(Long id) {
+        usuarioRepo.deleteById(id);
+    }
+    
 }

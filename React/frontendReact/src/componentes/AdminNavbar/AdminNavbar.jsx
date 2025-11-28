@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import "@/styles/AdminNavbar.css";
+
 
 export function AdminNavbar() {
   return (

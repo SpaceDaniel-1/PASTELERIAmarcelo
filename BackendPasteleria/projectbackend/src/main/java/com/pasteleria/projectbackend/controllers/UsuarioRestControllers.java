@@ -1,52 +1,55 @@
 package com.pasteleria.projectbackend.controllers;
 
-import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.pasteleria.projectbackend.entities.Usuario;
 import com.pasteleria.projectbackend.services.UsuarioServices;
-import java.util.List;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
+import java.util.ArrayList;
+import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioRestControllers {
 
-    @Autowired
     private UsuarioServices usuarioServices;
 
-    @PostMapping
-    public ResponseEntity<Usuario> crearUsuario(@RequestBody Usuario usuario) {
-        Usuario nuevoUsuario = usuarioServices.crear(usuario);
-        return ResponseEntity.ok(nuevoUsuario);
+    public UsuarioRestControllers(UsuarioServices usuarioServices) {
+        this.usuarioServices = usuarioServices;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Long id) {
-        Usuario usuario = usuarioServices.obtenerId(id);
-        return ResponseEntity.ok(usuario);
+    public ResponseEntity<Usuario> getById(@PathVariable Long id) {
+        return usuarioServices.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
- 
+    // 🔥🔥🔥 AQUI AGREGA EL NUEVO ENDPOINT 🔥🔥🔥
+    @GetMapping("/email/{email}")
+    public ResponseEntity<?> getByEmail(@PathVariable String email) {
+        return usuarioServices.findByEmail(email)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+    // 🔥🔥🔥 FIN NUEVO ENDPOINT 🔥🔥🔥
+
+    @PostMapping
+    public ResponseEntity<Usuario> create(@RequestBody Usuario usuario) {
+        if (usuarioServices.existsByUsername(usuario.getUsername())
+                || usuarioServices.existsByEmail(usuario.getEmail())) {
+            return ResponseEntity.badRequest().build();
+        }
+        Usuario saved = usuarioServices.save(usuario);
+        return ResponseEntity.ok(saved);
+    }
+
     @GetMapping
     public ResponseEntity<List<Usuario>> listarUsuarios() {
-        List<Usuario> usuarios = usuarioServices.listarTodos();
+        List<Usuario> usuarios = new ArrayList<>();
+        usuarioServices.findAll().forEach(usuarios::add);
         return ResponseEntity.ok(usuarios);
-    }
-
-  
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
-        usuarioServices.eliminar(id);
-        return ResponseEntity.noContent().build();
-    }
-
-   @PutMapping("/{id}")
-    public ResponseEntity<Usuario> actualizarUsuario(@PathVariable Long id, @RequestBody Usuario usuarioActualizado) {
-        Usuario usuario = usuarioServices.actualizar(id, usuarioActualizado);
-        return ResponseEntity.ok(usuario);
     }
 }
